@@ -34,3 +34,4 @@ demo
 test
 cmake-build-debug
 CMakeLists.txt
+.vscode/
