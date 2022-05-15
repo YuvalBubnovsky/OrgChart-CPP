@@ -11,7 +11,7 @@
 #include <stdexcept>
 using namespace std;
 
-#include "OrgChart.hpp"
+#include "sources/OrgChart.hpp"
 using namespace ariel;
 
 int main() {
@@ -43,7 +43,7 @@ int main() {
         cout << (*it) << " " ;
     }  // prints: CEO CTO VP_SW CFO COO VP_BI
 
-    for (string element : organization)
+    for (auto element : organization)
     { // this should work like level order
         cout << element << " " ;
     } // prints: CEO CTO CFO COO VP_SW VP_BI

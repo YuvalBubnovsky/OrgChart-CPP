@@ -8,130 +8,263 @@
 #include <stack>
 #include <queue>
 
+using std::invalid_argument;
+using std::logic_error;
+using std::ostream;
+using std::queue;
+using std::stack;
+using std::string;
+using std::vector;
+
+// Reference for this class was taken from Lecture 8 of the course, presentation 2.
+
 namespace ariel
 {
-    template<class T=string>
-    class OrgChart{
+    template <class T = string> // Template class, will be deaulted to using string;
+    class OrgChart
+    {
 
     public:
-        OrgChart(): p_root(nullptr){
+        OrgChart() : p_root(nullptr)
+        {
         }
 
-        ~OrgChart(){
+        ~OrgChart()
+        {
             // TODO: Free all nodes
         }
 
-        OrgChart &add_root(T data){
-            if(this->p_root == nullptr){
+        OrgChart &add_root(T data)
+        {
+            if (this->p_root == nullptr) // Case when no root exists
+            {
                 this->p_root = new Node(data);
             }
-            else{
-                throw logic_error("Organization Tree Already Exists");
+            else
+            { // If a root exists we just need to switch the data since this is a template class - no need to create a new root for this.
+                this->p_root->value=data;
             }
-            return *this;}
+            return *this;
+        }
 
-        OrgChart &add_sub(T manager_data, T subordinate_data){
+        OrgChart &add_sub(T manager_data, T subordinate_data)
+        {
             // TODO: implement
             return *this;
         }
 
-        friend ostream & operator<< (ostream& output, const OrgChart& orgChart){
-            output  << " ";
+        friend ostream &operator<<(ostream &output, const OrgChart &orgChart)
+        {
+            // TODO: implement
+            output << " ";
             return output;
         }
 
-
     private:
         // Avoid copying
-        OrgChart(const OrgChart& rhs);
-        OrgChart& operator=(const OrgChart& rhs);
+        OrgChart(const OrgChart &rhs);
+        OrgChart &operator=(const OrgChart &rhs);
 
         // Inner class
-        struct Node{
+        struct Node
+        {
             T value;
             vector<Node *> subordinates;
             Node *manager;
 
-            Node(T &info): value(info), manager(nullptr){}
+            Node(T &info) : value(info), manager(nullptr) {}
         };
 
         // Fields
         Node *p_root;
 
-    public:
-        class iterator{
-            private:
-            Node* p_node;
-            int _flag;
+    public: // START OF ITERATOR CLASS
+        class iterator
+        {
+        private:
+            Node *p_node;
+            int _flag; // flag to decide what type of iterator do we need to return
 
-            public:
-                iterator(Node* ptr = nullptr, int flag=0): p_node(ptr), _flag(flag){
-                    if(ptr==nullptr){
-                        throw logic_error("Pointing To Nothing!");
+            // Auxilary queue & stack to traverse the tree (use will be explained in detail below)
+            queue<Node *> aux_queue;
+            stack<Node *> aux_stack;
+
+            // FLAGS:
+            // 0 - Level Order
+            // 1 - Reverse Level Order
+            // 2 - Preorder
+
+        public:
+            iterator(Node *ptr = nullptr, int flag = 0) : p_node(ptr), _flag(flag)
+            {
+
+                if (p_node != nullptr)
+                { // Check if node is not pointing to null, we can't construct an iterator over it
+
+                    if (!p_node->subordinates.empty())
+                    { // If node has no sons, we can't return an iterator for it as there
+                      // is nothing to iterate over.
+
+                        // LEVEL ORDER:
+                        // Iterate over all the subordinates of a node in the orgtree and push them to the queue, thus
+                        // creating a level-order traversal of the tree
+                        if (_flag == 0)
+                        {
+                            for (auto &subordinate : p_node->subordinates)
+                            { // we're using auto here because this is a template class and we don't know the type
+                                aux_queue.push(subordinate);
+                            }
+                        }
+
+                        // REVERSE LEVEL ORDER:
+                        // Iterate over all the subordinates of a node in the orgtree and enqueue them to the auxilary queue, same
+                        // as in the level order traversal, then pop them from the queue and push them to the stack, thus
+                        // reversing the level order.
+                        else if (_flag == 1)
+                        {
+                            aux_queue.push(p_node);
+
+                            while (!aux_queue.empty())
+                            {
+                                Node *temp = aux_queue.front(); // temp node because we can't use pop() here, otherwise we'll get an error
+                                aux_queue.pop();
+
+                                if (!temp->subordinates.empty())
+                                { // same iteration concept as in level order, removing 1 since we already popped the queue front
+                                    for (auto i = temp->subordinates.size() - 1; i > 0; i--)
+                                    {
+                                        aux_queue.push(temp->subordinates.at(i));
+                                    }
+
+                                    aux_queue.push(temp->subordinates.at(0));
+                                }
+                                // We finished iterating, so push the last node to the stack
+                                aux_stack.push(temp);
+                            }
+                            // Now the stack is the entire level order - reversed, so we can iterate over it
+                            p_node = aux_stack.top();
+                            aux_stack.pop();
+                        }
+
+                        // PREORDER:
+                        // Exactly the same as reverse level order, while also reversing the roles of the stack and the queue to achieve the
+                        // desired resault.
+                        else
+                        {
+                            aux_stack.push(p_node);
+                            while (!aux_stack.empty())
+                            {
+                                Node *temp = aux_stack.top();
+                                aux_stack.pop();
+                                if (!temp->subordinates.empty())
+                                {
+                                    for (auto i = temp->subordinates.size() - 1; i > 0; i--)
+                                    {
+                                        aux_stack.push(temp->subordinates.at(i));
+                                    }
+                                    aux_stack.push(temp->subordinates.at(0));
+                                }
+                                aux_queue.push(temp);
+                            }
+                            // We are already printing the nodes in the while loop, so we only need to pop the queue here
+                            aux_queue.pop();
+                        }
                     }
+                }
+            }
 
-                    if(ptr->subordinates.empty()){
-                        // TODO: add logic if this is a leaf node
+            T &operator*() const
+            {
+                return p_node->value;
+            }
+
+            T *operator->() const
+            {
+                return &(p_node->value);
+            }
+
+            iterator &operator++()
+            {
+                if (!aux_queue.empty() || !aux_stack.empty())
+                {
+                    if (_flag == 0)
+                    { // Auxilary queue is already filled in level order, so we can just pop the front, we have now incremented by one
+                        p_node = aux_queue.front();
+                        aux_queue.pop();
+                       
                     }
-
-                    // TODO: add this
-                }
-
-                T& operator*() const {
-                    return p_node->value;
-                }
-
-                T* operator->() const {
-                    return &(p_node->value);
-                }
-
-                iterator& operator++(){
-                    // TODO: implement this based on the order flag
+                    else if (_flag == 1)
+                    { // Auxilary stack is already in reverse level order, so just pop it, we have now incremented by one
+                        p_node = aux_stack.top();
+                        aux_stack.pop();
+                    }
+                    else
+                    { // Auxilary queue is already in preorder, so just pop it, we have now incremented by one
+                        p_node = aux_queue.front();
+                        aux_queue.pop();
+                    }
                     return *this;
                 }
 
-                iterator operator++(int){
-                    // TODO: implement this based on order flag
-                 }
+                // If stack and queue are empty, we have reached the end of the tree, so we return an iterator pointing to nullptr
+                p_node = nullptr;
+                return *this;
+            }
 
-                 bool operator==(const iterator& rhs) const {
-                     return p_node == rhs.p_node;
-        } 
-                bool operator!=(const iterator& rhs) const {
-                    return p_node != rhs.p_node;
-                }
+            iterator operator++(int)
+            {
+                iterator temp = *this;
+                ++(temp);
+                return temp;
+            }
+
+            bool operator==(const iterator &rhs) const
+            {
+                return p_node == rhs.p_node;
+            }
+            bool operator!=(const iterator &rhs) const
+            {
+                return p_node != rhs.p_node;
+            }
         }; // END OF ITERATOR CLASS
 
-        iterator begin(){
-            return (iterator{p_root,0});
+        iterator begin()
+        {
+            return (iterator{p_root, 0});
         }
 
-        iterator end(){
-            return (iterator{nullptr,0});
-        }
-
-        iterator begin_level_order(){
-            return (iterator{p_root,0});
-        }
-
-        iterator end_level_order() {
+        iterator end()
+        {
             return (iterator{nullptr, 0});
         }
 
-        iterator begin_reverse_order() {
+        iterator begin_level_order()
+        {
+            return (iterator{p_root, 0});
+        }
+
+        iterator end_level_order()
+        {
+            return (iterator{nullptr, 0});
+        }
+
+        iterator begin_reverse_order()
+        {
             return (iterator{p_root, 1});
         }
 
-        iterator reverse_order() {
-            //not sure about this because we need to stop when we reach root
+        iterator reverse_order()
+        {
             return (iterator{nullptr, 1});
         }
 
-        iterator begin_preorder() {
+        iterator begin_preorder()
+        {
             return (iterator{p_root, 2});
         }
 
-        iterator end_preorder() {
+        iterator end_preorder()
+        {
             return (iterator{nullptr, 2});
         }
     };
