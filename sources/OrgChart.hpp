@@ -1,7 +1,4 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
-
 #include <stdexcept>
 
 #include <vector>
@@ -31,8 +28,16 @@ namespace ariel
 
         ~OrgChart()
         {
-            // TODO: Free all nodes
+            for (auto &subordinate : p_root->subordinates)
+            {
+                free(subordinate);
+            }
+            free(p_root);
         }
+
+        OrgChart(OrgChart &&) noexcept; // move constructor
+
+        OrgChart &operator=(OrgChart &&) noexcept; // move assignment operator
 
         OrgChart &add_root(T data)
         {
@@ -42,7 +47,7 @@ namespace ariel
             }
             else
             { // If a root exists we just need to switch the data since this is a template class - no need to create a new root for this.
-                this->p_root->value=data;
+                this->p_root->value = data;
             }
             return *this;
         }
@@ -50,14 +55,50 @@ namespace ariel
         OrgChart &add_sub(T manager_data, T subordinate_data)
         {
             // TODO: implement
+            if (this->p_root == nullptr)
+            {
+                throw logic_error("Tree Doesn't Exist!");
+            }
+            bool parent_flag = false;
+            Node *temp = p_root;
+            while (temp != nullptr)
+            {
+                if (temp->value == manager_data)
+                {
+                    parent_flag = true;
+                    Node *new_sub = new Node(subordinate_data);
+                    temp->subordinates.push_back(new_sub);
+                    break;
+                }
+
+                for (auto &subordinate : temp->subordinates)
+                {
+                    if (subordinate->value == manager_data)
+                    {
+                        Node *new_sub = new Node(subordinate_data);
+                        subordinate->subordinates.push_back(new_sub);
+                        return *this;
+                    }
+                }
+
+                temp = temp->subordinates.front();
+            }
+            if (!parent_flag)
+            {
+                throw logic_error("Manager Doesn't Exist!");
+            }
             return *this;
         }
 
-        friend ostream &operator<<(ostream &output, const OrgChart &orgChart)
+        friend ostream &operator<<(ostream &os, OrgChart &orgChart)
         {
             // TODO: implement
-            output << " ";
-            return output;
+            // Currently implemented as level-order printing.
+            for (auto it = orgChart.begin_level_order(); it != orgChart.end_level_order(); ++it)
+            {
+                os << (*it) << std::endl;
+            }
+            return os;
         }
 
     private:
@@ -94,9 +135,25 @@ namespace ariel
             // 1 - Reverse Level Order
             // 2 - Preorder
 
-        public:
+        public: // CREDIT TO SHAULI TARAGIN FOR HELPING ME WITH THIS
             iterator(Node *ptr = nullptr, int flag = 0) : p_node(ptr), _flag(flag)
             {
+                // Making sure auxilary queue and stack are empty
+                if (!aux_queue.empty())
+                {
+                    while (aux_queue.size() > 0)
+                    {
+                        aux_queue.pop();
+                    }
+                }
+
+                if (!aux_queue.empty())
+                {
+                    while (aux_stack.size() > 0)
+                    {
+                        aux_stack.pop();
+                    }
+                }
 
                 if (p_node != nullptr)
                 { // Check if node is not pointing to null, we can't construct an iterator over it
@@ -166,7 +223,6 @@ namespace ariel
                                 }
                                 aux_queue.push(temp);
                             }
-                            // We are already printing the nodes in the while loop, so we only need to pop the queue here
                             aux_queue.pop();
                         }
                     }
@@ -183,25 +239,19 @@ namespace ariel
                 return &(p_node->value);
             }
 
-            iterator &operator++()
+            iterator &operator++() // TODO: improve this
             {
                 if (!aux_queue.empty() || !aux_stack.empty())
                 {
-                    if (_flag == 0)
+                    if (_flag == 0 || _flag == 2)
                     { // Auxilary queue is already filled in level order, so we can just pop the front, we have now incremented by one
                         p_node = aux_queue.front();
                         aux_queue.pop();
-                       
                     }
-                    else if (_flag == 1)
+                    else
                     { // Auxilary stack is already in reverse level order, so just pop it, we have now incremented by one
                         p_node = aux_stack.top();
                         aux_stack.pop();
-                    }
-                    else
-                    { // Auxilary queue is already in preorder, so just pop it, we have now incremented by one
-                        p_node = aux_queue.front();
-                        aux_queue.pop();
                     }
                     return *this;
                 }
@@ -211,7 +261,7 @@ namespace ariel
                 return *this;
             }
 
-            iterator operator++(int)
+            iterator operator++(int) // TODO: improve this
             {
                 iterator temp = *this;
                 ++(temp);
