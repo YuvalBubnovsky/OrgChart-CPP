@@ -78,7 +78,7 @@ namespace ariel
             // TODO: implement
             if (this->p_root == nullptr)
             {
-                throw logic_error("Tree Doesn't Exist!");
+                throw invalid_argument("Tree Doesn't Exist!");
             }
             bool parent_flag = false;
             Node *temp = p_root;
@@ -106,7 +106,7 @@ namespace ariel
             }
             if (!parent_flag)
             {
-                throw logic_error("Manager Doesn't Exist!");
+                throw invalid_argument("Manager Doesn't Exist Or Wrong Sub-Tree");
             }
             return *this;
         }
