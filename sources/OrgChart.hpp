@@ -26,13 +26,34 @@ namespace ariel
         {
         }
 
-        ~OrgChart()
-        {
-            for (auto &subordinate : p_root->subordinates)
+        ~OrgChart() 
+        { // Destructor works the same as reverse-level-order iterator, that way we can delete the tree in the same way and free the memory
+
+            queue<Node *> aux_queue;
+            stack<Node *> aux_stack;
+
+            aux_queue.push(p_root);
+
+            while (!aux_queue.empty())
             {
-                free(subordinate);
+                Node *temp = aux_queue.front(); 
+                aux_queue.pop();
+
+                if (!temp->subordinates.empty())
+                { 
+                    for (auto i = temp->subordinates.size() - 1; i > 0; i--)
+                    {
+                        aux_queue.push(temp->subordinates.at(i));
+                    }
+
+                    aux_queue.push(temp->subordinates.at(0));
+                }
+
+                aux_stack.push(temp);
+                p_root = aux_stack.top();
+                aux_stack.pop();
+                delete(p_root);
             }
-            free(p_root);
         }
 
         OrgChart(OrgChart &&) noexcept; // move constructor
@@ -120,6 +141,7 @@ namespace ariel
         Node *p_root;
 
     public: // START OF ITERATOR CLASS
+
         class iterator
         {
         private:
@@ -245,6 +267,7 @@ namespace ariel
                 {
                     if (_flag == 0 || _flag == 2)
                     { // Auxilary queue is already filled in level order, so we can just pop the front, we have now incremented by one
+                      // Same goes for preorder.
                         p_node = aux_queue.front();
                         aux_queue.pop();
                     }
