@@ -141,12 +141,13 @@ namespace ariel
         Node *p_root;
 
     public: // START OF ITERATOR CLASS
+    // TODO: add enumeration for iterator types
 
         class iterator
         {
         private:
             Node *p_node;
-            int _flag; // flag to decide what type of iterator do we need to return
+            int _flag; // flag to decide what type of iterator do we need to returnenum
 
             // Auxilary queue & stack to traverse the tree (use will be explained in detail below)
             queue<Node *> aux_queue;
@@ -169,7 +170,7 @@ namespace ariel
                     }
                 }
 
-                if (!aux_queue.empty())
+                if (!aux_stack.empty())
                 {
                     while (aux_stack.size() > 0)
                     {
@@ -189,9 +190,17 @@ namespace ariel
                         // creating a level-order traversal of the tree
                         if (_flag == 0)
                         {
-                            for (auto &subordinate : p_node->subordinates)
-                            { // we're using auto here because this is a template class and we don't know the type
-                                aux_queue.push(subordinate);
+                            aux_queue.push(p_node);
+                            while(!aux_queue.empty())
+                            {
+                                Node *temp = aux_queue.front();
+                                aux_queue.pop();
+                                aux_stack.push(temp);
+
+                                for (auto &subordinate : temp->subordinates)
+                                {
+                                    aux_queue.push(subordinate);
+                                }
                             }
                         }
 
@@ -205,7 +214,7 @@ namespace ariel
 
                             while (!aux_queue.empty())
                             {
-                                Node *temp = aux_queue.front(); // temp node because we can't use pop() here, otherwise we'll get an error
+                                Node *temp = aux_queue.front();
                                 aux_queue.pop();
 
                                 if (!temp->subordinates.empty())
@@ -265,16 +274,26 @@ namespace ariel
             {
                 if (!aux_queue.empty() || !aux_stack.empty())
                 {
-                    if (_flag == 0 || _flag == 2)
+                    if (_flag == 2)
                     { // Auxilary queue is already filled in level order, so we can just pop the front, we have now incremented by one
                       // Same goes for preorder.
                         p_node = aux_queue.front();
                         aux_queue.pop();
                     }
-                    else
-                    { // Auxilary stack is already in reverse level order, so just pop it, we have now incremented by one
+                    else if(_flag == 1){
+                     // Auxilary stack is already in reverse level order, so just pop it, we have now incremented by one
                         p_node = aux_stack.top();
                         aux_stack.pop();
+                    } else { // TODO: fix this
+                        p_node = aux_queue.front();
+                        aux_queue.pop();
+                        if (p_node != nullptr) {
+                            if (!p_node->subordinates.empty()) {
+                                for (auto const &subordinate: p_node->subordinates) {
+                                    aux_queue.push(subordinate);
+                                }
+                            }
+                        }
                     }
                     return *this;
                 }

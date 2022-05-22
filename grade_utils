@@ -25,20 +25,20 @@ run_in_folder_if_exists() {
 
 
 # A function that echoes and executes a command.
-call() {
-	echo "! ${@/eval/}"
+call() { 
+	echo "! ${@/eval/}" 
 	$@
 }
 
 # A function that echoes and executes a command.
 # If it fails, it sets grade=0.
 # If it succeeds, it sets grade=100.
-grade_command() {
+grade_command() { 
 	grade=100
 	call timeout $TIMEOUT $@
 	exitcode=$?
 	if [ $exitcode -ne 0 ]
-	then
+	then 
 		printf "*** Command failed. Exit code: $exitcode ***\n"
 		grade=0
 	fi
@@ -48,13 +48,13 @@ grade_command() {
 # A function that echoes and executes a command.
 # If it fails, it sets grade=0.
 # If it succeeds, it sets grade=[last line of output]
-grade_program() {
+grade_program() { 
 	program=$1
-	echo "! timeout $TIMEOUT ./$program"
+	echo "! timeout $TIMEOUT ./$program" 
 	timeout $TIMEOUT ./$program
 	exitcode=$?
 	if [ $exitcode -ne 0 ]
-	then
+	then 
 		printf "*** Program failed. Exit code: $exitcode ***\n"
 		grade=0
 	else
