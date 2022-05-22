@@ -5,28 +5,38 @@
 #include <stack>
 #include <queue>
 
+using std::deque;
 using std::invalid_argument;
 using std::logic_error;
-using std::out_of_range;
 using std::ostream;
+using std::out_of_range;
 using std::queue;
 using std::stack;
-using std::deque;
 using std::string;
 using std::vector;
 
-// Reference for this class was taken from Lecture 8 of the course, presentation 2.
+constexpr int LEVEL_ORDER = 0;
+constexpr int REVERSE_LEVEL_ORDER = 1;
+constexpr int PRE_ORDER = 2;
 
-namespace ariel {
-    template<class T = string> // Template class, will be deaulted to using string;
-    class OrgChart {
+// Reference for this class was taken from Lecture 8 of the course, presentation 2.
+// TODO: comment the code
+
+namespace ariel
+{
+    template <class T = string> // Template class, will be deaulted to using string;
+    class OrgChart
+    {
 
     public:
-        OrgChart() : p_root(nullptr) {
+        OrgChart() : p_root(nullptr)
+        {
         }
 
-        ~OrgChart() {
-            if (this->p_root == nullptr) {
+        ~OrgChart()
+        {
+            if (this->p_root == nullptr)
+            {
                 delete this->p_root;
                 return;
             }
@@ -35,12 +45,15 @@ namespace ariel {
 
             aux_queue.push(this->p_root);
 
-            while (!aux_queue.empty()) {
+            while (!aux_queue.empty())
+            {
                 Node *temp = aux_queue.front();
                 aux_queue.pop();
 
-                if (!temp->subordinates.empty()) {
-                    for (auto i = temp->subordinates.size() - 1; i > 0; i--) {
+                if (!temp->subordinates.empty())
+                {
+                    for (auto i = temp->subordinates.size() - 1; i > 0; i--)
+                    {
                         aux_queue.push(temp->subordinates.at(i));
                     }
 
@@ -58,47 +71,56 @@ namespace ariel {
 
         OrgChart &operator=(OrgChart &&) noexcept; // move assignment operator
 
-        OrgChart &add_root(T data) {
+        OrgChart &add_root(T data)
+        {
             if (this->p_root == nullptr) // Case when no root exists
             {
                 this->p_root = new Node(data);
-            } else { // If a root exists we just need to switch the data since this is a template class - no need to create a new root for this.
+            }
+            else
+            { // If a root exists we just need to switch the data since this is a template class - no need to create a new root for this.
                 this->p_root->value = data;
             }
             return *this;
         }
 
-        OrgChart &add_sub(T manager_data, T subordinate_data) {
-            // TODO: implement
-            if (this->p_root == nullptr) {
+        OrgChart &add_sub(T manager_data, T subordinate_data)
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Tree Doesn't Exist!");
             }
             deque<Node *> traversal_queue;
             traversal_queue.push_back(this->p_root);
             bool parent_flag = false;
-            while (!traversal_queue.empty()) {
+            while (!traversal_queue.empty())
+            {
                 Node *temp = traversal_queue.front();
-                if (temp->value == manager_data) {
+                if (temp->value == manager_data)
+                {
                     Node *subordinate = new Node(subordinate_data);
                     temp->subordinates.push_back(subordinate);
                     parent_flag = true;
                     break;
                 }
-                for (Node *employee: temp->subordinates) {
+                for (Node *employee : temp->subordinates)
+                {
                     traversal_queue.push_back(employee);
                 }
                 traversal_queue.pop_front();
             }
-            if (!parent_flag) {
+            if (!parent_flag)
+            {
                 throw invalid_argument("Manager Doesn't Exist!");
             }
             return *this;
         }
 
-        friend ostream &operator<<(ostream &os, OrgChart &orgChart) {
-            // TODO: implement
-            // Currently implemented as level-order printing.
-            for (auto it = orgChart.begin_level_order(); it != orgChart.end_level_order(); ++it) {
+        friend ostream &operator<<(ostream &os, OrgChart &orgChart)
+        {
+            // TODO: implement this function
+            for (auto it = orgChart.begin_level_order(); it != orgChart.end_level_order(); ++it)
+            {
                 os << (*it) << std::endl;
             }
             return os;
@@ -111,12 +133,13 @@ namespace ariel {
         OrgChart &operator=(const OrgChart &rhs);
 
         // Inner class
-        struct Node {
+        struct Node
+        {
             T value;
             vector<Node *> subordinates;
-            Node *next_level_order; // pointer to the next in in level order
+            Node *next_level_order;   // pointer to the next in in level order
             Node *next_reverse_order; // pointer to the next node in reverse level order
-            Node *next_preorder; // pointer to the next node in preorder order
+            Node *next_preorder;      // pointer to the next node in preorder order
             Node *manager;
 
             Node(T &info) : value(info), manager(nullptr) {}
@@ -126,77 +149,87 @@ namespace ariel {
         Node *p_root;
 
     public: // START OF ITERATOR CLASS
-        // TODO: add enumeration for iterator types
 
-        class iterator {
+        class iterator
+        {
         private:
             Node *p_node;
-            int _flag; // flag to decide what type of iterator do we need to returnenum
+            int _flag; // flag to decide what type of iterator do we need to return
 
-            // Auxilary queue & stack to traverse the tree (use will be explained in detail below)
             queue<Node *> aux_queue;
             stack<Node *> aux_stack;
             deque<Node *> aux_deque;
 
-            // FLAGS:
-            // 0 - Level Order
-            // 1 - Reverse Level Order
-            // 2 - Preorder
-
         public:
-            iterator(Node *ptr = nullptr, int flag = 2) : p_node(ptr), _flag(flag) {
+            iterator(Node *ptr = nullptr, int flag = PRE_ORDER) : p_node(ptr), _flag(flag)
+            {
                 // Making sure auxilary queue and stack are empty
-                if (!aux_queue.empty()) {
-                    while (aux_queue.size() > 0) {
+                if (!aux_queue.empty())
+                {
+                    while (aux_queue.size() > 0)
+                    {
                         aux_queue.pop();
                     }
                 }
 
-                if (!aux_stack.empty()) {
-                    while (aux_stack.size() > 0) {
+                if (!aux_stack.empty())
+                {
+                    while (aux_stack.size() > 0)
+                    {
                         aux_stack.pop();
                     }
                 }
 
-                if (!aux_deque.empty()) {
-                    while (aux_queue.size() > 0) {
+                if (!aux_deque.empty())
+                {
+                    while (aux_queue.size() > 0)
+                    {
                         aux_deque.pop_back();
                     }
                 }
 
                 if (this->p_node !=
-                    nullptr) { // Check if node is not pointing to null, we can't construct an iterator over it
+                    nullptr)
+                { // Check if node is not pointing to null, we can't construct an iterator over it
 
                     // LEVEL ORDER:
                     // Run an iterative BFS algorithm
-                    if (this->_flag == 0) {
+                    if (this->_flag == LEVEL_ORDER)
+                    {
                         this->aux_deque.push_back(this->p_node);
                         Node *temp = nullptr;
-                        while (!this->aux_deque.empty()) {
+                        while (!this->aux_deque.empty())
+                        {
                             temp = this->aux_deque.front();
                             this->aux_deque.pop_front();
-                            for (Node *subordinate: temp->subordinates) {
+                            for (Node *subordinate : temp->subordinates)
+                            {
                                 this->aux_deque.push_back(subordinate);
                             }
                             temp->next_level_order = this->aux_deque.front();
                         }
-                        if (temp != nullptr) {
+                        if (temp != nullptr)
+                        {
                             temp->next_level_order = nullptr;
                         }
                     }
 
-                    else if (this->_flag == 1) {
+                    else if (this->_flag == REVERSE_LEVEL_ORDER)
+                    {
                         this->aux_deque.push_back(this->p_node);
                         Node *temp = nullptr;
-                        while (!this->aux_deque.empty()) {
+                        while (!this->aux_deque.empty())
+                        {
                             temp = this->aux_deque.front();
                             this->aux_deque.pop_front();
-                            for (int i = (int) temp->subordinates.size() - 1; i >= 0; i--) {
-                                this->aux_deque.push_back(temp->subordinates.at((size_t) i));
+                            for (int i = (int)temp->subordinates.size() - 1; i >= 0; i--)
+                            {
+                                this->aux_deque.push_back(temp->subordinates.at((size_t)i));
                             }
                             temp->next_reverse_order = this->aux_deque.front();
                         }
-                        if (temp != nullptr) {
+                        if (temp != nullptr)
+                        {
                             temp->next_reverse_order = nullptr;
                         }
 
@@ -205,7 +238,8 @@ namespace ariel {
                         Node *next = nullptr;
                         Node *curr = this->p_node;
 
-                        while (curr != nullptr) {
+                        while (curr != nullptr)
+                        {
                             next = curr->next_reverse_order;
                             curr->next_reverse_order = prev;
                             prev = curr;
@@ -214,51 +248,65 @@ namespace ariel {
                         this->p_node = prev;
                     }
 
-                        // PREORDER:
-                        // Exactly the same as reverse level order, while also reversing the roles of the stack and the queue to achieve the
-                        // desired resault.
-                    else {
-                        if (!aux_stack.empty()) {
-                            while (aux_stack.size() > 0) {
+                    // PREORDER:
+                    // Exactly the same as reverse level order, while also reversing the roles of the stack and the queue to achieve the
+                    // desired resault.
+                    else
+                    {
+                        if (!aux_stack.empty())
+                        {
+                            while (aux_stack.size() > 0)
+                            {
                                 aux_stack.pop();
                             }
                         }
                         this->aux_stack.push(this->p_node);
                         Node *temp = nullptr;
-                        while (!this->aux_stack.empty()) {
+                        while (!this->aux_stack.empty())
+                        {
                             temp = this->aux_stack.top();
                             this->aux_stack.pop();
-                            for (int i = (int) temp->subordinates.size() - 1; i >= 0; i--) {
-                                this->aux_stack.push(temp->subordinates.at((size_t) i));
+                            for (int i = (int)temp->subordinates.size() - 1; i >= 0; i--)
+                            {
+                                this->aux_stack.push(temp->subordinates.at((size_t)i));
                             }
-                            if (!this->aux_stack.empty()) {
+                            if (!this->aux_stack.empty())
+                            {
                                 temp->next_preorder = this->aux_stack.top();
                             }
                         }
-                        if (temp != nullptr) {
+                        if (temp != nullptr)
+                        {
                             temp->next_preorder = nullptr;
                         }
                     }
-
                 }
             }
 
-            T &operator*() const {
+            T &operator*() const
+            {
                 return this->p_node->value;
             }
 
-            T *operator->() const {
+            T *operator->() const
+            {
                 return &(this->p_node->value);
             }
 
-            iterator &operator++() // TODO: improve this
+            iterator &operator++()
             {
-                if (!(this->p_node == nullptr)) {
-                    if (this->_flag == 2) {
+                if (!(this->p_node == nullptr))
+                {
+                    if (this->_flag == PRE_ORDER)
+                    {
                         this->p_node = this->p_node->next_preorder;
-                    } else if (this->_flag == 1) {
+                    }
+                    else if (this->_flag == REVERSE_LEVEL_ORDER)
+                    {
                         this->p_node = this->p_node->next_reverse_order;
-                    } else {
+                    }
+                    else
+                    {
                         this->p_node = this->p_node->next_level_order;
                     }
                     return *this;
@@ -267,76 +315,94 @@ namespace ariel {
                 return *this;
             }
 
-            iterator operator++(int) // TODO: improve this
+            iterator operator++(int)
             {
                 iterator temp = *this;
                 ++(temp);
                 return temp;
             }
 
-            bool operator==(const iterator &rhs) const {
+            bool operator==(const iterator &rhs) const
+            {
                 return this->p_node == rhs.p_node;
             }
 
-            bool operator!=(const iterator &rhs) const {
+            bool operator!=(const iterator &rhs) const
+            {
                 return this->p_node != rhs.p_node;
             }
         }; // END OF ITERATOR CLASS
 
-        iterator begin() {
-            if (this->p_root == nullptr) {
+        iterator begin()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{this->p_root, 0});
+            return (iterator{this->p_root, LEVEL_ORDER});
         }
 
-        iterator end() {
-            if (this->p_root == nullptr) {
+        iterator end()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{nullptr, 0});
+            return (iterator{nullptr, LEVEL_ORDER});
         }
 
-        iterator begin_level_order() {
-            if (this->p_root == nullptr) {
+        iterator begin_level_order()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{this->p_root, 0});
+            return (iterator{this->p_root, LEVEL_ORDER});
         }
 
-        iterator end_level_order() {
-            if (this->p_root == nullptr) {
+        iterator end_level_order()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{nullptr, 0});
+            return (iterator{nullptr, LEVEL_ORDER});
         }
 
-        iterator begin_reverse_order() {
-            if (this->p_root == nullptr) {
+        iterator begin_reverse_order()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{this->p_root, 1});
+            return (iterator{this->p_root, REVERSE_LEVEL_ORDER});
         }
 
-        iterator reverse_order() {
-            if (this->p_root == nullptr) {
+        iterator reverse_order()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{nullptr, 1});
+            return (iterator{nullptr, REVERSE_LEVEL_ORDER});
         }
 
-        iterator begin_preorder() {
-            if (this->p_root == nullptr) {
+        iterator begin_preorder()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{this->p_root, 2});
+            return (iterator{this->p_root, PRE_ORDER});
         }
 
-        iterator end_preorder() {
-            if (this->p_root == nullptr) {
+        iterator end_preorder()
+        {
+            if (this->p_root == nullptr)
+            {
                 throw invalid_argument("Chart Is Empty!");
             }
-            return (iterator{nullptr, 2});
+            return (iterator{nullptr, PRE_ORDER});
         }
     };
 }
