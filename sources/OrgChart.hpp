@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <stdexcept>
 
@@ -20,7 +21,6 @@ constexpr int REVERSE_LEVEL_ORDER = 1;
 constexpr int PRE_ORDER = 2;
 
 // Reference for this class was taken from Lecture 8 of the course, presentation 2.
-// TODO: comment the code
 
 namespace ariel
 {
@@ -116,14 +116,9 @@ namespace ariel
             return *this;
         }
 
-        friend ostream &operator<<(ostream &os, OrgChart &orgChart)
-        {
-            // TODO: implement this function
-            for (auto it = orgChart.begin_level_order(); it != orgChart.end_level_order(); ++it)
-            {
-                os << (*it) << std::endl;
-            }
-            return os;
+        friend ostream &operator<<(ostream &output, const OrgChart &orgChart) {
+            PrintTree(output, orgChart.p_root, "", true);
+            return output;
         }
 
     private:
@@ -147,6 +142,20 @@ namespace ariel
 
         // Fields
         Node *p_root;
+
+        static ostream &PrintTree(ostream &output, Node *p_node, string move, bool last) {
+            output << move + ">- " + p_node->value +"\n";
+            if(!last){
+                move+="  ";
+            }
+            else{
+                move+= "|  ";
+            }
+            for (size_t i = 0; i < p_node->subordinates.size(); i++) {
+                PrintTree(output, p_node->subordinates[i], move, i == p_node->subordinates.size() - 1);
+            }
+            return output;
+        }
 
     public: // START OF ITERATOR CLASS
 

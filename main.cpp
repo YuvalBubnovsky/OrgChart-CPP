@@ -1,50 +1,99 @@
-/**
- * Demo file for the exercise on iterators
- *
- * @author Tal Zichlinsky
- * @since 2022-02
- */
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-using namespace std;
-
+#include "iostream"
 #include "sources/OrgChart.hpp"
+
 using namespace ariel;
+using namespace std;
 
 int main()
 {
-    OrgChart<string> org;
-    OrgChart<string> org_empty;
-    OrgChart<string> org_double_names;
-    /* create normal tree */
-    org.add_root("dana");
-    org.add_root("shir");
-   org.add_sub("shir", "tal");
-   org.add_sub("shir", "sapir");
-    org.add_sub("sapir", "dan");
-    org.add_sub("dan", "ziv");
-    org.add_sub("tal", "avi");
-    org.add_sub("tal", "yossi");
-    org.add_sub("shir", "ido");
-    org.add_sub("ziv", "shaked");
-    org.add_sub("ziv", "ofer");
 
-    org_double_names.add_root("adi");
-    for (size_t i = 0; i < 11; i++)
+    OrgChart<> demo_chart;
+
+    /*simple root creation*/
+    string root;
+    cout << "Insert the root of the chart:"
+         << "\n";
+    cin >> root;
+    demo_chart.add_root(root);
+
+    string choice;
+    string sub;
+
+    while (true)
     {
-        org_double_names.add_sub("adi", "adi");
+        cout << "A. To add subs to the tree enter: addsub"
+             << "\n";
+        cout << "B. To apply a certain order insert: \n "
+             << "1. level order \n 2. reverse order \n 3. preorder"
+             << "\n";
+        cout << "C. at anytime you wish to end program and display the chart insert Exit"
+             << "\n";
+        cout << "D. to display a pre-generated chart insert: pregen"
+             << "\n";
+        cin >> choice;
+        if (choice == "addsub")
+        {
+            cout << "Enter the root of the sub: "
+                 << "\n";
+            cin >> root;
+            cout << "Now enter the actual sub you want to add: "
+                 << "\n";
+            cin >> sub;
+            demo_chart.add_sub(root, sub);
+        }
+        else if (choice == "1")
+        {
+            /*level order*/
+            for (auto it = demo_chart.begin_level_order(); it != demo_chart.end_level_order(); ++it)
+            {
+                cout << (*it) << " ";
+            }
+            cout << "\n";
+        }
+        else if (choice == "2")
+        {
+            /*reverse order*/
+            for (auto it = demo_chart.begin_reverse_order(); it != demo_chart.reverse_order(); ++it)
+            {
+                cout << (*it) << " ";
+            }
+            cout << "\n";
+        }
+        else if (choice == "3")
+        {
+            /*preorder*/
+            for (auto it = demo_chart.begin_preorder(); it != demo_chart.end_preorder(); ++it)
+            {
+                cout << (*it) << " ";
+            }
+            cout << "\n";
+        }
+        else if (choice == "Exit")
+        {
+            cout << "Exit program"
+                 << "\n";
+            break;
+        }
+        else if(choice == "pregen"){
+            demo_chart.add_root("shir");
+            demo_chart.add_sub("shir", "tal");
+            demo_chart.add_sub("shir", "sapir");
+            demo_chart.add_sub("sapir", "dan");
+            demo_chart.add_sub("dan", "ziv");
+            demo_chart.add_sub("tal", "avi");
+            demo_chart.add_sub("tal", "yossi");
+            demo_chart.add_sub("shir", "ido");
+            demo_chart.add_sub("ziv", "shaked");
+            demo_chart.add_sub("ziv", "ofer");
+        }
+        else
+        {
+            cout << "Bad choice enter again..."
+                 << "\n";
+        }
     }
-
-    /*check reverse level order with normal tree*/
-    std::vector<std::string> v = {"shaked", "ofer", "ziv", "avi", "yossi", "dan", "tal", "sapir", "ido", "shir"};
-    size_t i = 0;
-    for(auto it = org.begin_reverse_order(); it != org.reverse_order(); ++it){
-        cout << *it << "\t" << v.at(i++) << "\t" << endl;
-    }
-
-
-    return 0;
+    cout << "printing chart in someway... : "
+         << "\n";
+    cout << demo_chart << "\n";
+    cout << endl;
 }
