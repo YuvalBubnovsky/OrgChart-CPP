@@ -152,7 +152,7 @@ namespace ariel
                 move+= "|  ";
             }
             for (size_t i = 0; i < p_node->subordinates.size(); i++) {
-                PrintTree(output, p_node->subordinates[i], move, i == p_node->subordinates.size() - 1);
+                PrintTree(output, p_node->subordinates.at(i), move, i == p_node->subordinates.size() - 1);
             }
             return output;
         }
