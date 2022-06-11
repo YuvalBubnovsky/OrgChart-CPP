@@ -30,6 +30,8 @@ int main()
              << "\n";
         cout << "D. to display a pre-generated chart insert: pregen"
              << "\n";
+        cout << "E. to print the tree at anytime insert: print"
+             << "\n";
         cin >> choice;
         if (choice == "addsub")
         {
@@ -85,6 +87,9 @@ int main()
             demo_chart.add_sub("shir", "ido");
             demo_chart.add_sub("ziv", "shaked");
             demo_chart.add_sub("ziv", "ofer");
+            cout << demo_chart << "\n";
+        } else if(choice == "print"){
+            cout << demo_chart << "\n";
         }
         else
         {
